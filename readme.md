@@ -53,7 +53,22 @@ http://35.200.185.69:8000/v1/autocomplete?query=a
 ### Approach 1: Brute Force (Single Character Query)
 
 - Queried `a-z` to get names for each letter.
-- **Issue**: Not all names are retrieved (e.g., querying `a` may miss `Aaron` if the API limits results).
+- **Result**: Got 10 names for each character.
+- **No. of request**: 26
+- **No. of names**: 260
+- **Issue**: Not all names are retrieved.
+
+### Approach 2: Better Approach (Double Characters Query with Token Bucket Rate Limiter)
+
+- Queried `aa-zz` to get names for each letter.
+- **Challenge**: Got **API Rate Limit** hit at **100 requests per minute(60000 ms)**.
+- **Solution**: Implement **Token Bucket Rate Limiter**.
+- **Result**: Got 10 names for each character.
+- **No. of request**: 676
+- **No. of names**: 6720
+- **Issue**: Not all names are retrieved.
+
+
 
 ## 4. Implementation
 
