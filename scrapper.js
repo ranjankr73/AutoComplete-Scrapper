@@ -10,6 +10,28 @@ function addCharToQuery(query){
     }
 }
 
+function writeInfoToFile(version, rateLimiter, algorithm, queryLength, timeTaken, size, totalNames){
+    let content = [];
+    const fileData = fs.readFileSync('./names/info.json', 'utf-8');
+    content = JSON.parse(fileData);
+
+    if(!Array.isArray(content)){
+        content = [];
+    }
+
+    content.push({
+        version: version,
+        rate_limiter: rateLimiter,
+        algorithm: algorithm,
+        query_length: queryLength,
+        time_taken: timeTaken,
+        no_of_requests: size,
+        total_names: totalNames,
+    });
+
+    fs.writeFileSync('./names/info.json', JSON.stringify(content, null, 2));
+}
+
 async function exploreAPI() {
     discoveredNames.clear();
 
@@ -34,10 +56,16 @@ async function exploreAPI() {
         });
 
         tasks = [];
-        console.info(`Time taken to process query of length ${queryLength}: ${leakyBucketRateLimiter.getTimeTakenToProcess()}ms`);
-        queryLength++;
+        const timeTaken = leakyBucketRateLimiter.getTimeTakenToProcess();
+
+        console.info(`Time taken to process query of length ${queryLength}: ${timeTaken}ms`);
         
-        fs.writeFileSync('names_v1.json', JSON.stringify([...discoveredNames], null, 2));
+        fs.writeFileSync('./names/v1_leaky_bucket_bfs.json', JSON.stringify([...discoveredNames], null, 2));
+
+        writeInfoToFile('v1', 'Leaky Bucket', 'BFS', queryLength, timeTaken, size, discoveredNames.size);
+
+        queryLength++;
+
         console.log(`Saved ${discoveredNames.size} names. Moving to length ${queryLength}...`);
     }
 

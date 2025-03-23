@@ -1,0 +1,20 @@
+[
+  {
+    "version": "v1",
+    "rate_limiter": "Leaky Bucket",
+    "algorithm": "BFS",
+    "query_length": 1,
+    "time_taken": 2472,
+    "no_of_requests": 26,
+    "total_names": 260
+  },
+  {
+    "version": "v1",
+    "rate_limiter": "Leaky Bucket",
+    "algorithm": "BFS",
+    "query_length": 2,
+    "time_taken": 504751,
+    "no_of_requests": 676,
+    "total_names": 6720
+  }
+]

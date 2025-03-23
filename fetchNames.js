@@ -13,9 +13,7 @@ async function fetchNames(query, attempt=1) {
         // const response = await axios.get(API_URL + query);
 
         const response = await leakyBucketRateLimiter.addRequest(() => 
-            axios.get(API_URL + query, {
-              timeout: 5000,
-            }));
+            axios.get(API_URL + query));
     
         if (response.data && Array.isArray(response.data.results)) {
             response.data.results.forEach(name => discoveredNames.add(name));
@@ -30,7 +28,7 @@ async function fetchNames(query, attempt=1) {
             const delay = 5000 * Math.pow(2, attempt-1);
             console.warn(`Rate limit overflow for ${query}. Retrying in ${delay/1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchNames(query, attempt + 1);
+            return fetchNames(query, attempt + 1);
         }else if (error.response?.status === 429) {
             const delay = 2000 * Math.pow(2, attempt - 1);
             console.warn(`API rate limit hit. Retrying ${query} in ${delay/1000}s...`);
