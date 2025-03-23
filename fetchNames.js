@@ -1,27 +1,39 @@
 import axios from 'axios';
-import { TokenBucket } from './RateLimiter.js';
+import { TokenBucket, LeakyBucket } from './RateLimiter.js';
 
 const API_URL = 'http://35.200.185.69:8000/v1/autocomplete?query=';
 const discoveredNames = new Set();
 
-const tokenBucketRateLimiter = new TokenBucket(100, 60000);
+// const tokenBucketRateLimiter = new TokenBucket(100, 60000);
+const leakyBucketRateLimiter = new LeakyBucket(1000, 100);
 
 async function fetchNames(query, attempt=1) {
     try {
-        await tokenBucketRateLimiter.waitForToken();
-        const response = await axios.get(API_URL + query);
+        // await tokenBucketRateLimiter.waitForToken();
+        // const response = await axios.get(API_URL + query);
+
+        const response = await leakyBucketRateLimiter.addRequest(() => 
+            axios.get(API_URL + query, {
+              timeout: 5000,
+            }));
     
-        const results = response.data?.results || [];
-        results.forEach(name => discoveredNames.add(name));
+        if (response.data && Array.isArray(response.data.results)) {
+            response.data.results.forEach(name => discoveredNames.add(name));
+        }
         
         console.log(`Success: ${query}`);
 
-        return results.length > 0;
+        return response.data.results.length > 0;
 
     } catch (error) {
-        if (error.response?.status === 429) {
-            let delay = 2000 * Math.pow(2, attempt - 1);
-            console.warn(`Rate limit hit for '${query}'. Retrying in ${(delay) / 1000}s...`);
+        if(error.message === 'Bucket overflow'){
+            const delay = 5000 * Math.pow(2, attempt-1);
+            console.warn(`Rate limit overflow for ${query}. Retrying in ${delay/1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchNames(query, attempt + 1);
+        }else if (error.response?.status === 429) {
+            const delay = 2000 * Math.pow(2, attempt - 1);
+            console.warn(`API rate limit hit. Retrying ${query} in ${delay/1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return fetchNames(query, attempt+1);
         } else {
@@ -31,4 +43,4 @@ async function fetchNames(query, attempt=1) {
     }
 }
 
-export { fetchNames, discoveredNames };
+export { fetchNames, discoveredNames, leakyBucketRateLimiter };

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { fetchNames, discoveredNames } from './fetchNames.js';
+import { fetchNames, discoveredNames, leakyBucketRateLimiter } from './fetchNames.js';
 
 const CHARACTERS = 'abcdefghijklmnopqrstuvwxyz';
 let nextQueue = CHARACTERS.split('');
@@ -34,6 +34,7 @@ async function exploreAPI() {
         });
 
         tasks = [];
+        console.info(`Time taken to process query of length ${queryLength}: ${leakyBucketRateLimiter.getTimeTakenToProcess()}ms`);
         queryLength++;
         
         fs.writeFileSync('names_v1.json', JSON.stringify([...discoveredNames], null, 2));

@@ -4,6 +4,7 @@ export class TokenBucket {
         this.perMilliseconds = perMilliseconds;
         this.tokens = maxRequests;
         this.lastRefill = Date.now();
+        this.startTime = Date.now();
 
         setInterval(() => this.refill(), perMilliseconds/maxRequests);
     }
@@ -25,6 +26,12 @@ export class TokenBucket {
         }
         this.tokens--;
     }
+
+    getTimeTakenToProcess(){
+        const timeTaken = Date.now() - this.startTime;
+        this.startTime = Date.now();
+        return timeTaken;
+    }
 }
 
 export class LeakyBucket {
@@ -33,6 +40,7 @@ export class LeakyBucket {
         this.leakRatePerMs = leakRatePerMin / (60 * 1000);
         this.tokens = capacity;
         this.lastLeakTime = Date.now();
+        this.startTime = Date.now();
     }
 
     async addRequest(request) {
@@ -51,5 +59,11 @@ export class LeakyBucket {
         }
         
         throw new Error('Bucket overflow');
+    }
+
+    getTimeTakenToProcess(){
+        const timeTaken = Date.now() - this.startTime;
+        this.startTime = Date.now();
+        return timeTaken;
     }
 }
